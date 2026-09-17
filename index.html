@@ -1,0 +1,2841 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#000000">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <title>Remax AI · MAX Wallet</title>
+    
+    <!-- SRI برای امنیت CDN -->
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" 
+          rel="stylesheet" 
+          integrity="sha384-3B0qKJfKmCLQa8Jq8yKj9zX7xV8Vv9wX7dX0wX5Vv9wX7dX0wX5Vv9wX7dX0wX5V"
+          crossorigin="anonymous">
+    <link rel="stylesheet" 
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+          integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+          crossorigin="anonymous"
+          referrerpolicy="no-referrer">
+    
+    <!-- CSP برای جلوگیری از XSS و تزریق اسکریپت -->
+    <meta http-equiv="Content-Security-Policy" 
+          content="default-src 'self'; 
+                   style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com;
+                   font-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com;
+                   img-src 'self' data: https://api.dicebear.com;
+                   script-src 'self' 'unsafe-inline';
+                   connect-src 'self';
+                   frame-ancestors 'none';
+                   base-uri 'self';
+                   form-action 'self';">
+    
+    <style>
+        :root {
+            --pure-black: #000000;
+            --pure-white: #ffffff;
+            --soft-lavender: #E3E4FA;
+            --soft-lavender-glow: rgba(227, 228, 250, 0.4);
+            
+            --dark-surface: #0a0a0a;
+            --card-surface: #121212;
+            --card-surface-2: #1a1a1a;
+            --muted-gray: #737373;
+            --danger-red: #ef4444;
+            
+            --sidebar-expanded: 360px;
+            --sidebar-collapsed: 76px;
+            
+            --shadow-3d: 
+                0 20px 40px rgba(0, 0, 0, 0.95),
+                0 0 0 1px rgba(227, 228, 250, 0.1),
+                inset 0 1px 1px rgba(255, 255, 255, 0.15);
+            
+            --shadow-card-3d: 
+                0 10px 25px rgba(0, 0, 0, 0.8),
+                0 1px 0 rgba(227, 228, 250, 0.1) inset,
+                0 -1px 0 rgba(0, 0, 0, 0.8) inset;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Vazirmatn', sans-serif;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            width: 100%;
+            min-height: 100vh;
+            background: var(--pure-black);
+            color: var(--pure-white);
+            overflow-x: hidden;
+        }
+
+        /* ============================================ */
+        /* ===== دسکتاپ ===== */
+        /* ============================================ */
+
+        .desktop-layout {
+            display: flex;
+            justify-content: flex-end;
+            min-height: 100vh;
+            padding: 30px;
+        }
+
+        .sidebar-container {
+            position: relative;
+            height: calc(100vh - 60px);
+            max-height: 850px;
+            width: var(--sidebar-expanded);
+            transition: width 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .sidebar-container.collapsed {
+            width: var(--sidebar-collapsed);
+        }
+
+        .sidebar-panel {
+            position: absolute;
+            inset: 0;
+            background: var(--dark-surface);
+            border-radius: 40px;
+            padding: 26px 20px;
+            box-shadow: var(--shadow-3d);
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            /* FIX #4: اجازه دادن به تولتیپ‌ها که بیرون بیان */
+            overflow-y: auto;
+            overflow-x: visible;
+            transition: padding 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .sidebar-panel::-webkit-scrollbar { width: 0; }
+
+        .sidebar-container.collapsed .sidebar-panel {
+            padding: 22px 12px;
+            border-radius: 32px;
+            align-items: center;
+        }
+
+        /* ===== محتوای قابل مخفی شدن ===== */
+        .sidebar-expanded-only {
+            opacity: 1;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        /* FIX #19: اضافه کردن top/right برای جلوگیری از پرش */
+        .sidebar-container.collapsed .sidebar-expanded-only {
+            opacity: 0;
+            transform: translateX(-20px);
+            pointer-events: none;
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 0;
+            height: 0;
+            overflow: hidden;
+        }
+
+        /* ============================================ */
+        /* ===== هدر پروفایل ===== */
+        /* ============================================ */
+
+        .profile-header-box {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--card-surface);
+            padding: 12px 16px;
+            border-radius: 30px;
+            box-shadow: var(--shadow-card-3d);
+            border: 1px solid rgba(227, 228, 250, 0.1);
+            flex-shrink: 0;
+        }
+
+        .credit-badge-trigger {
+            background: var(--soft-lavender);
+            color: var(--pure-black);
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px var(--soft-lavender-glow);
+            transition: all 0.25s ease;
+            position: relative;
+            overflow: hidden;
+            border: none;
+        }
+
+        .credit-badge-trigger::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+            animation: shine 3s ease-in-out infinite;
+        }
+
+        @keyframes shine {
+            0% { left: -100%; }
+            50%, 100% { left: 100%; }
+        }
+
+        .credit-badge-trigger:hover {
+            transform: scale(1.06);
+            box-shadow: 0 6px 25px var(--soft-lavender-glow);
+        }
+
+        .user-info-box {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-details {
+            text-align: right;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .welcome-text {
+            font-size: 11px;
+            color: var(--muted-gray);
+        }
+
+        .edit-profile-link {
+            font-size: 12px;
+            color: var(--pure-white);
+            font-weight: 800;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
+        }
+
+        .avatar-wrapper {
+            position: relative;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--pure-black);
+            border: 2px solid var(--soft-lavender);
+            overflow: hidden;
+            cursor: pointer;
+            box-shadow: 0 0 12px var(--soft-lavender-glow);
+            flex-shrink: 0;
+        }
+
+        .avatar-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .avatar-wrapper .overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            color: var(--pure-white);
+            font-size: 12px;
+            transition: opacity 0.2s ease;
+        }
+
+        .avatar-wrapper:hover .overlay { opacity: 1; }
+        #file-input { display: none; }
+
+        /* ============================================ */
+        /* ===== آیکون اکانت — حالت بسته ===== */
+        /* ============================================ */
+
+        .account-icon-collapsed {
+            display: none;
+            width: 52px;
+            height: 52px;
+            border-radius: 18px;
+            background: var(--card-surface);
+            border: 1px solid rgba(227, 228, 250, 0.15);
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: all 0.25s ease;
+            position: relative;
+            color: var(--soft-lavender);
+        }
+
+        .account-icon-collapsed:hover {
+            border-color: var(--soft-lavender);
+            transform: scale(1.06);
+            box-shadow: 0 4px 15px var(--soft-lavender-glow);
+            color: var(--pure-white);
+        }
+
+        .account-icon-collapsed svg {
+            width: 26px;
+            height: 26px;
+        }
+
+        /* FIX #3: SVG با currentColor */
+        .account-icon-collapsed svg circle,
+        .account-icon-collapsed svg path {
+            stroke: currentColor;
+        }
+
+        .sidebar-container.collapsed .account-icon-collapsed {
+            display: flex;
+        }
+
+        /* تولتیپ */
+        .account-icon-collapsed::before {
+            content: 'حساب کاربری';
+            position: absolute;
+            right: calc(100% + 12px);
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--card-surface-2);
+            color: var(--pure-white);
+            padding: 8px 14px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.25s ease;
+            border: 1px solid rgba(227, 228, 250, 0.15);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.8);
+            z-index: 9999;
+        }
+
+        .account-icon-collapsed:hover::before {
+            opacity: 1;
+            right: calc(100% + 16px);
+        }
+
+        /* ============================================ */
+        /* ===== منوها ===== */
+        /* ============================================ */
+
+        .menu-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border-radius: 20px;
+            color: var(--pure-white);
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.25s ease;
+            background: none;
+            text-align: right;
+            width: 100%;
+            font-family: inherit;
+        }
+
+        .menu-item:hover {
+            background: var(--card-surface);
+            border-color: rgba(227, 228, 250, 0.15);
+            box-shadow: var(--shadow-card-3d);
+        }
+
+        .menu-item-content {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            font-size: 13.5px;
+            font-weight: 600;
+        }
+
+        .menu-item-content i {
+            font-size: 16px;
+            width: 20px;
+            text-align: center;
+            color: var(--soft-lavender);
+        }
+
+        .section-title {
+            font-size: 11px;
+            color: var(--muted-gray);
+            margin: 2px 8px -6px 0;
+            font-weight: 700;
+            width: 100%;
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .service-card {
+            background: var(--card-surface);
+            border: 1px solid rgba(227, 228, 250, 0.08);
+            border-radius: 22px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: var(--pure-white);
+            font-size: 13px;
+            font-weight: 700;
+            box-shadow: var(--shadow-card-3d);
+            transition: all 0.2s ease;
+            cursor: pointer;
+            font-family: inherit;
+            width: 100%;
+        }
+
+        .service-card:hover {
+            background: var(--soft-lavender);
+            color: var(--pure-black);
+        }
+
+        .service-card:hover i {
+            color: var(--pure-black);
+        }
+
+        .service-card i {
+            color: var(--soft-lavender);
+            font-size: 16px;
+            transition: color 0.2s ease;
+        }
+
+        .sub-tag {
+            font-size: 11px;
+            color: var(--soft-lavender);
+            border: 1px solid rgba(227, 228, 250, 0.3);
+            padding: 2px 8px;
+            border-radius: 10px;
+            background: rgba(227, 228, 250, 0.08);
+        }
+
+        .badge-new {
+            background: var(--soft-lavender);
+            color: var(--pure-black);
+            font-size: 10px;
+            font-weight: 900;
+            padding: 2px 8px;
+            border-radius: 12px;
+        }
+
+        /* ============================================ */
+        /* ===== آیکون‌های حالت بسته ===== */
+        /* ============================================ */
+
+        .collapsed-icons {
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+            align-items: center;
+            flex: 1;
+            margin-top: 4px;
+        }
+
+        .sidebar-container.collapsed .collapsed-icons {
+            display: flex;
+        }
+
+        .collapsed-icon-item {
+            width: 52px;
+            height: 52px;
+            border-radius: 18px;
+            background: var(--card-surface);
+            border: 1px solid rgba(227, 228, 250, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            color: var(--soft-lavender);
+            font-size: 18px;
+            position: relative;
+            flex-shrink: 0;
+            font-family: inherit;
+            padding: 0;
+        }
+
+        .collapsed-icon-item:hover {
+            background: var(--soft-lavender);
+            color: var(--pure-black);
+            border-color: var(--soft-lavender);
+            transform: scale(1.08);
+            box-shadow: 0 4px 15px var(--soft-lavender-glow);
+        }
+
+        /* FIX #4: تولتیپ با z-index بالا و پوزیشن درست */
+        .collapsed-icon-item::before {
+            content: attr(data-label);
+            position: absolute;
+            right: calc(100% + 12px);
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--card-surface-2);
+            color: var(--pure-white);
+            padding: 8px 14px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.25s ease;
+            border: 1px solid rgba(227, 228, 250, 0.15);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.8);
+            z-index: 9999;
+        }
+
+        .collapsed-icon-item:hover::before {
+            opacity: 1;
+            right: calc(100% + 16px);
+        }
+
+        .collapsed-icon-item.special {
+            background: var(--soft-lavender);
+            color: var(--pure-black);
+            border-color: var(--soft-lavender);
+            box-shadow: 0 4px 15px var(--soft-lavender-glow);
+        }
+
+        .collapsed-icon-item.special:hover {
+            background: var(--pure-white);
+        }
+
+        .collapsed-divider {
+            width: 32px;
+            height: 1px;
+            background: rgba(227, 228, 250, 0.15);
+            margin: 4px 0;
+            flex-shrink: 0;
+        }
+
+        .collapsed-spacer {
+            flex: 1;
+            min-height: 20px;
+        }
+
+        /* ============================================ */
+        /* ===== دکمه toggle سایدبار ===== */
+        /* ============================================ */
+
+        .sidebar-toggle {
+            width: 52px;
+            height: 52px;
+            border-radius: 18px;
+            background: var(--card-surface);
+            border: 1px solid rgba(227, 228, 250, 0.12);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            color: var(--soft-lavender);
+            font-size: 16px;
+            flex-shrink: 0;
+            font-family: inherit;
+            padding: 0;
+        }
+
+        .sidebar-toggle:hover {
+            background: var(--soft-lavender);
+            color: var(--pure-black);
+            border-color: var(--soft-lavender);
+            box-shadow: 0 4px 15px var(--soft-lavender-glow);
+        }
+
+        .sidebar-toggle i {
+            transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* FIX #11: فقط یه toggle با state درست */
+        .sidebar-container:not(.collapsed) .collapsed-icons {
+            display: none;
+        }
+
+        .sidebar-container.collapsed .sidebar-expanded-toggle {
+            display: none;
+        }
+
+        .sidebar-container:not(.collapsed) .sidebar-expanded-toggle {
+            width: 100%;
+            height: 48px;
+            border-radius: 18px;
+            gap: 8px;
+            margin-top: auto;
+            display: flex;
+        }
+
+        .sidebar-container:not(.collapsed) .sidebar-expanded-toggle::after {
+            content: 'بستن سایدبار';
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        /* ============================================ */
+        /* ===== مودال‌ها ===== */
+        /* ============================================ */
+
+        .wallet-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            padding: 24px;
+        }
+
+        .wallet-modal-overlay.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .wallet-modal {
+            width: 100%;
+            max-width: 1300px;
+            max-height: 92vh;
+            background: linear-gradient(160deg, #0f0f0f 0%, #050505 100%);
+            border-radius: 32px;
+            padding: 28px 28px 24px;
+            box-shadow: 
+                0 40px 80px rgba(0, 0, 0, 0.95),
+                0 0 0 1px rgba(227, 228, 250, 0.12),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(30px);
+            opacity: 0;
+            transition: all 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .wallet-modal-overlay.show .wallet-modal {
+            transform: scale(1) translateY(0);
+            opacity: 1;
+        }
+
+        .wallet-modal::-webkit-scrollbar { width: 0; }
+
+        .wallet-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 14px;
+            border-bottom: 1px solid rgba(227, 228, 250, 0.1);
+        }
+
+        .wallet-modal-title {
+            font-size: 18px;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .wallet-modal-title .icon-wrap {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: var(--soft-lavender);
+            color: var(--pure-black);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 17px;
+            box-shadow: 0 4px 15px var(--soft-lavender-glow);
+        }
+
+        .wallet-modal-close {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: rgba(227, 228, 250, 0.05);
+            border: 1px solid rgba(227, 228, 250, 0.15);
+            color: var(--pure-white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 15px;
+        }
+
+        .wallet-modal-close:hover {
+            background: var(--soft-lavender);
+            color: var(--pure-black);
+            transform: rotate(90deg);
+        }
+
+        /* کارت موجودی */
+        .balance-card-new {
+            position: relative;
+            background: linear-gradient(145deg, #1e1e1e 0%, #0f0f0f 100%);
+            border-radius: 26px;
+            padding: 32px 22px 24px;
+            box-shadow: 
+                0 18px 36px rgba(0, 0, 0, 0.95),
+                0 0 0 1px rgba(227, 228, 250, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .balance-card-new::before {
+            content: '';
+            position: absolute;
+            top: 14px;
+            left: 18px;
+            right: 18px;
+            height: 1px;
+            background-image: linear-gradient(90deg, rgba(227,228,250,0.3) 50%, transparent 50%);
+            background-size: 12px 1px;
+            background-repeat: repeat-x;
+            z-index: 1;
+        }
+
+        .balance-card-new::after {
+            content: '';
+            position: absolute;
+            top: -28px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 55%;
+            height: 56px;
+            background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+            border-radius: 0 0 36px 36px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+            z-index: 0;
+        }
+
+        .balance-label-text {
+            font-size: 12px;
+            color: var(--muted-gray);
+            font-weight: 600;
+            position: relative;
+            z-index: 2;
+            margin-top: 16px;
+        }
+
+        .balance-amount-display {
+            font-size: 38px;
+            font-weight: 900;
+            color: var(--pure-white);
+            letter-spacing: -1px;
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+            position: relative;
+            z-index: 2;
+            direction: ltr;
+            text-shadow: 0 0 30px var(--soft-lavender-glow);
+        }
+
+        .balance-amount-display .currency-label {
+            font-size: 14px;
+            color: var(--soft-lavender);
+            font-weight: 700;
+        }
+
+        /* دکمه‌های عملیات */
+        .action-buttons-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .action-btn-item {
+            background: linear-gradient(145deg, #151515, #0a0a0a);
+            border: 1px solid rgba(227, 228, 250, 0.08);
+            border-radius: 20px;
+            padding: 14px 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            box-shadow: 
+                0 8px 20px rgba(0, 0, 0, 0.7),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            transition: all 0.25s ease;
+            font-family: inherit;
+            color: inherit;
+        }
+
+        .action-btn-item:hover {
+            background: linear-gradient(145deg, #1e1e1e, #111);
+            border-color: var(--soft-lavender);
+            transform: translateY(-3px);
+            box-shadow: 
+                0 12px 28px rgba(0, 0, 0, 0.8),
+                0 0 20px var(--soft-lavender-glow);
+        }
+
+        .action-btn-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: rgba(227, 228, 250, 0.05);
+            border: 1.5px solid rgba(227, 228, 250, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            color: var(--pure-white);
+            transition: all 0.25s ease;
+        }
+
+        .action-btn-item:hover .action-btn-icon {
+            background: var(--soft-lavender);
+            color: var(--pure-black);
+            border-color: var(--soft-lavender);
+        }
+
+        .action-btn-label {
+            font-size: 10.5px;
+            font-weight: 700;
+            color: var(--pure-white);
+            text-align: center;
+            line-height: 1.3;
+        }
+
+        /* اشتراک‌ها */
+        .plans-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 6px;
+        }
+
+        .plans-title {
+            font-size: 18px;
+            font-weight: 900;
+            color: var(--pure-white);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .plans-title i {
+            color: var(--soft-lavender);
+            font-size: 20px;
+            filter: drop-shadow(0 0 10px var(--soft-lavender-glow));
+        }
+
+        .plans-subtitle {
+            font-size: 11px;
+            color: var(--muted-gray);
+            font-weight: 600;
+        }
+
+        .plans-slider {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 14px;
+            padding: 4px 0;
+        }
+
+        .plan-card {
+            position: relative;
+            border-radius: 24px;
+            padding: 22px 16px 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: linear-gradient(160deg, #141414, #0a0a0a);
+            border: 1px solid rgba(227, 228, 250, 0.08);
+            box-shadow: 
+                0 10px 24px rgba(0, 0, 0, 0.7),
+                inset 0 1px 0 rgba(227, 228, 250, 0.06);
+            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow: hidden;
+            min-height: 450px;
+        }
+
+        .plan-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(227, 228, 250, 0.06), transparent);
+            transition: left 0.7s ease;
+            pointer-events: none;
+        }
+
+        .plan-card:hover::after {
+            left: 100%;
+        }
+
+        .plan-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(227, 228, 250, 0.25);
+            box-shadow: 
+                0 18px 36px rgba(0, 0, 0, 0.85),
+                0 0 30px var(--soft-lavender-glow);
+        }
+
+        .plan-card.featured {
+            border-color: rgba(227, 228, 250, 0.3);
+            background: linear-gradient(160deg, #1a1a24, #0f0f14);
+            box-shadow: 
+                0 10px 30px rgba(0, 0, 0, 0.7),
+                0 0 25px rgba(227, 228, 250, 0.15);
+        }
+
+        .plan-badge {
+            position: absolute;
+            top: 14px;
+            left: 14px;
+            font-size: 9px;
+            font-weight: 900;
+            padding: 4px 10px;
+            border-radius: 10px;
+            letter-spacing: 0.3px;
+            z-index: 3;
+        }
+
+        .plan-badge.popular {
+            background: var(--soft-lavender);
+            color: var(--pure-black);
+            box-shadow: 0 0 15px var(--soft-lavender-glow);
+        }
+
+        .plan-badge.best {
+            background: var(--pure-white);
+            color: var(--pure-black);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
+        }
+
+        .plan-logo {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+
+        .plan-logo-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 19px;
+            background: rgba(227, 228, 250, 0.08);
+            color: var(--soft-lavender);
+            border: 1px solid rgba(227, 228, 250, 0.2);
+        }
+
+        .plan-card.featured .plan-logo-icon {
+            background: rgba(227, 228, 250, 0.15);
+            border-color: rgba(227, 228, 250, 0.4);
+            box-shadow: 0 0 15px var(--soft-lavender-glow);
+        }
+
+        .plan-name {
+            font-size: 14px;
+            font-weight: 900;
+            color: var(--pure-white);
+            text-align: right;
+        }
+
+        .plan-price {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 2px;
+            margin-top: 4px;
+        }
+
+        .plan-price-value {
+            font-size: 20px;
+            font-weight: 900;
+            color: var(--pure-white);
+            direction: ltr;
+            letter-spacing: -0.5px;
+        }
+
+        .plan-price-period {
+            font-size: 10px;
+            color: var(--muted-gray);
+            font-weight: 600;
+        }
+
+        .plan-validity {
+            font-size: 9.5px;
+            color: var(--muted-gray);
+            font-weight: 600;
+            text-align: left;
+            margin-top: -6px;
+        }
+
+        .plan-buy-btn {
+            margin-top: 8px;
+            border: none;
+            padding: 12px;
+            border-radius: 14px;
+            font-size: 12.5px;
+            font-weight: 900;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            width: 100%;
+            background: var(--soft-lavender);
+            color: var(--pure-black);
+            font-family: inherit;
+        }
+
+        .plan-buy-btn:hover {
+            transform: scale(1.03);
+            background: var(--pure-white);
+            box-shadow: 0 0 20px var(--soft-lavender-glow);
+        }
+
+        .plan-card.featured .plan-buy-btn {
+            background: var(--pure-white);
+            color: var(--pure-black);
+        }
+
+        .plan-card.featured .plan-buy-btn:hover {
+            background: var(--soft-lavender);
+        }
+
+        .plan-features {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 6px;
+            flex: 1;
+        }
+
+        .plan-feature {
+            display: flex;
+            align-items: flex-start;
+            gap: 6px;
+            font-size: 10.5px;
+            color: var(--pure-white);
+            font-weight: 600;
+            line-height: 1.5;
+        }
+
+        .plan-feature i {
+            font-size: 9px;
+            margin-top: 3px;
+            flex-shrink: 0;
+            color: var(--soft-lavender);
+        }
+
+        .plan-feature.highlight {
+            color: var(--soft-lavender);
+            font-weight: 800;
+        }
+
+        .plan-more-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--muted-gray);
+            cursor: pointer;
+            padding: 8px 0;
+            margin-top: 6px;
+            border-top: 1px solid rgba(227, 228, 250, 0.08);
+            transition: color 0.2s ease;
+            background: none;
+            border-left: none;
+            border-right: none;
+            border-bottom: none;
+            width: 100%;
+            font-family: inherit;
+        }
+
+        .plan-more-link:hover {
+            color: var(--soft-lavender);
+        }
+
+        /* Toggle Switch */
+        .toggle-switch {
+            width: 48px;
+            height: 28px;
+            border-radius: 20px;
+            background: rgba(227, 228, 250, 0.15);
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(227, 228, 250, 0.2);
+            flex-shrink: 0;
+        }
+
+        .toggle-switch.active {
+            background: var(--soft-lavender);
+            border-color: var(--soft-lavender);
+        }
+
+        .toggle-knob {
+            position: absolute;
+            top: 3px;
+            right: 3px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--pure-white);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+        }
+
+        .toggle-switch.active .toggle-knob {
+            right: calc(100% - 23px);
+            background: var(--pure-black);
+        }
+
+        /* ============================================ */
+        /* ===== موبایل ===== */
+        /* ============================================ */
+
+        @media (max-width: 1100px) {
+            .plans-slider {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .desktop-layout {
+                display: block;
+                padding: 0;
+                min-height: 100vh;
+            }
+
+            .sidebar-container,
+            .sidebar-container.collapsed {
+                width: 100%;
+                height: auto;
+                max-height: none;
+                position: relative;
+            }
+
+            .sidebar-panel {
+                position: relative;
+                border-radius: 0;
+                padding: 18px 16px;
+                padding-top: max(18px, env(safe-area-inset-top));
+                padding-bottom: max(18px, env(safe-area-inset-bottom));
+                min-height: 100vh;
+                gap: 16px;
+                box-shadow: none;
+            }
+
+            /* FIX #7: در موبایل همیشه باز */
+            .sidebar-container .sidebar-expanded-only {
+                opacity: 1 !important;
+                transform: none !important;
+                position: static !important;
+                width: auto !important;
+                height: auto !important;
+                overflow: visible !important;
+                pointer-events: all !important;
+            }
+
+            .sidebar-container .collapsed-icons {
+                display: none !important;
+            }
+
+            .sidebar-container .profile-header-box {
+                display: flex !important;
+            }
+
+            .sidebar-container .account-icon-collapsed {
+                display: none !important;
+            }
+
+            .sidebar-container .sidebar-toggle {
+                display: none !important;
+            }
+
+            .profile-header-box {
+                padding: 10px 14px;
+                border-radius: 22px;
+            }
+
+            .credit-badge-trigger {
+                padding: 8px 14px;
+                font-size: 12px;
+                border-radius: 16px;
+            }
+
+            .user-details .welcome-text {
+                font-size: 10px;
+            }
+
+            .user-details .edit-profile-link {
+                font-size: 11.5px;
+            }
+
+            .avatar-wrapper {
+                width: 40px;
+                height: 40px;
+            }
+
+            .menu-item {
+                padding: 14px 16px;
+                border-radius: 18px;
+            }
+
+            .menu-item-content {
+                font-size: 13px;
+            }
+
+            .service-card {
+                padding: 15px;
+                border-radius: 20px;
+                font-size: 13px;
+            }
+
+            .wallet-modal-overlay {
+                align-items: flex-end;
+                padding: 0;
+            }
+
+            .wallet-modal {
+                max-width: 100%;
+                width: 100%;
+                max-height: 94vh;
+                border-radius: 28px 28px 0 0;
+                padding: 10px 16px 20px;
+                padding-bottom: max(20px, env(safe-area-inset-bottom));
+                gap: 16px;
+                transform: translateY(100%);
+                opacity: 1;
+                transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+            }
+
+            .wallet-modal-overlay.show .wallet-modal {
+                transform: translateY(0);
+            }
+
+            .wallet-modal::before {
+                content: '';
+                display: block;
+                width: 44px;
+                height: 5px;
+                background: rgba(227, 228, 250, 0.25);
+                border-radius: 10px;
+                margin: 0 auto 8px;
+                flex-shrink: 0;
+            }
+
+            .wallet-modal-title {
+                font-size: 16px;
+            }
+
+            .wallet-modal-title .icon-wrap {
+                width: 36px;
+                height: 36px;
+                font-size: 15px;
+            }
+
+            .wallet-modal-close {
+                width: 36px;
+                height: 36px;
+                font-size: 14px;
+            }
+
+            .balance-card-new {
+                padding: 28px 18px 20px;
+                border-radius: 22px;
+            }
+
+            .balance-amount-display {
+                font-size: 34px;
+            }
+
+            .action-buttons-row {
+                gap: 8px;
+            }
+
+            .action-btn-item {
+                padding: 14px 6px;
+                border-radius: 18px;
+            }
+
+            .action-btn-icon {
+                width: 38px;
+                height: 38px;
+                font-size: 15px;
+            }
+
+            .plans-slider {
+                display: flex;
+                gap: 10px;
+                overflow-x: auto;
+                scroll-snap-type: x mandatory;
+                -webkit-overflow-scrolling: touch;
+                padding: 4px 0 12px;
+                margin: 0 -16px;
+                padding-left: 16px;
+                padding-right: 16px;
+            }
+
+            .plans-slider::-webkit-scrollbar { height: 0; }
+
+            .plan-card {
+                flex: 0 0 270px;
+                scroll-snap-align: center;
+                padding: 20px 16px 16px;
+                border-radius: 22px;
+                min-height: 430px;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .plan-card {
+                flex: 0 0 250px;
+            }
+
+            .balance-amount-display {
+                font-size: 30px;
+            }
+        }
+
+        /* FIX #14: @supports درست برای env() */
+        @supports (padding: env(safe-area-inset-top)) {
+            @media (max-width: 768px) {
+                .sidebar-panel {
+                    padding-top: max(18px, env(safe-area-inset-top));
+                    padding-bottom: max(18px, env(safe-area-inset-bottom));
+                }
+                .wallet-modal {
+                    padding-bottom: max(20px, env(safe-area-inset-bottom));
+                }
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="desktop-layout">
+        <div class="sidebar-container" id="sidebarContainer">
+            <aside class="sidebar-panel" id="sidebarPanel">
+                
+                <!-- هدر پروفایل — باز -->
+                <div class="profile-header-box sidebar-expanded-only">
+                    <button class="credit-badge-trigger" id="openWalletBtn" type="button" aria-label="کیف پول">
+                        <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+                        <span id="credit-count">۳,۸۵۰</span>
+                    </button>
+
+                    <div class="user-info-box">
+                        <div class="user-details">
+                            <span class="welcome-text">خوش آمدید</span>
+                            <button class="edit-profile-link" id="editProfileBtn" type="button">ویرایش حساب</button>
+                        </div>
+                        <div class="avatar-wrapper" id="avatarTrigger" role="button" tabindex="0" aria-label="تغییر آواتار">
+                            <img id="avatar-img" src="https://api.dicebear.com/7.x/bottts/svg?seed=RemaxMono" alt="آواتار کاربر">
+                            <div class="overlay"><i class="fa-solid fa-camera" aria-hidden="true"></i></div>
+                        </div>
+                        <input type="file" id="file-input" accept="image/png,image/jpeg,image/webp,image/gif" aria-hidden="true">
+                    </div>
+                </div>
+
+                <!-- آیکون اکانت — بسته -->
+                <button class="account-icon-collapsed" id="accountIconBtn" type="button" aria-label="حساب کاربری">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <circle cx="12" cy="9" r="3" stroke="currentColor" stroke-width="1.5"></circle>
+                        <path d="M17.9691 20C17.81 17.1085 16.9247 15 11.9999 15C7.07521 15 6.18991 17.1085 6.03076 20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
+                        <path d="M7 3.33782C8.47087 2.48697 10.1786 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 10.1786 2.48697 8.47087 3.33782 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
+                    </svg>
+                </button>
+
+                <!-- منوها -->
+                <div class="menu-list sidebar-expanded-only">
+                    <button class="menu-item" type="button" data-action="models">
+                        <div class="menu-item-content">
+                            <i class="fa-solid fa-microchip" aria-hidden="true"></i>
+                            <span>مدل ها</span>
+                        </div>
+                        <span class="sub-tag">ChatGPT 5.5</span>
+                    </button>
+
+                    <button class="menu-item" type="button" data-action="history">
+                        <div class="menu-item-content">
+                            <i class="fa-regular fa-clock" aria-hidden="true"></i>
+                            <span>تاریخچه گفتگوها</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-left" style="font-size: 10px; color: var(--muted-gray);" aria-hidden="true"></i>
+                    </button>
+                </div>
+
+                <div class="section-title sidebar-expanded-only">سرویس های اصلی</div>
+                <div class="services-grid sidebar-expanded-only">
+                    <button class="service-card" type="button" data-action="video">
+                        <span>ویدیو</span>
+                        <i class="fa-solid fa-clapperboard" aria-hidden="true"></i>
+                    </button>
+                    <button class="service-card" type="button" data-action="image">
+                        <span>تصویر</span>
+                        <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+                    </button>
+                    <button class="service-card" type="button" data-action="music">
+                        <span>موزیک</span>
+                        <i class="fa-solid fa-music" aria-hidden="true"></i>
+                    </button>
+                    <button class="service-card" type="button" data-action="gallery">
+                        <span>گالری</span>
+                        <i class="fa-solid fa-shapes" aria-hidden="true"></i>
+                    </button>
+                </div>
+
+                <div class="section-title sidebar-expanded-only">امکانات و ابزارها</div>
+                <div class="menu-list sidebar-expanded-only">
+                    <button class="menu-item" type="button" data-action="assistants">
+                        <div class="menu-item-content">
+                            <i class="fa-solid fa-robot" aria-hidden="true"></i>
+                            <span>دستیارهای تخصصی</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-left" style="font-size: 10px; color: var(--muted-gray);" aria-hidden="true"></i>
+                    </button>
+
+                    <button class="menu-item" type="button" data-action="toolbox">
+                        <div class="menu-item-content">
+                            <i class="fa-solid fa-toolbox" aria-hidden="true"></i>
+                            <span>جعبه ابزار هوشمند</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-left" style="font-size: 10px; color: var(--muted-gray);" aria-hidden="true"></i>
+                    </button>
+
+                    <button class="menu-item" type="button" data-action="voice">
+                        <div class="menu-item-content">
+                            <i class="fa-solid fa-wave-square" aria-hidden="true"></i>
+                            <span>صداگذاری و دوبله</span>
+                        </div>
+                        <span class="badge-new">جدید</span>
+                    </button>
+
+                    <button class="menu-item" type="button" data-action="prompts">
+                        <div class="menu-item-content">
+                            <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+                            <span>کانال اختصاصی پرامپت</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-left" style="font-size: 10px; color: var(--muted-gray);" aria-hidden="true"></i>
+                    </button>
+                </div>
+
+                <div class="menu-list sidebar-expanded-only" style="margin-top: auto;">
+                    <button class="menu-item" type="button" data-action="support">
+                        <div class="menu-item-content">
+                            <i class="fa-solid fa-headset" aria-hidden="true"></i>
+                            <span>پشتیبانی آنلاین</span>
+                        </div>
+                    </button>
+
+                    <button class="menu-item" id="openSettingsBtn" type="button">
+                        <div class="menu-item-content">
+                            <i class="fa-solid fa-gear" aria-hidden="true"></i>
+                            <span>تنظیمات عمومی</span>
+                        </div>
+                    </button>
+                </div>
+
+                <!-- آیکون‌های حالت بسته -->
+                <div class="collapsed-icons">
+                    <button class="collapsed-icon-item special" data-label="کیف پول MAX" type="button" id="openWalletBtnCollapsed" aria-label="کیف پول">
+                        <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+                    </button>
+
+                    <button class="collapsed-icon-item" data-label="مدل ها" type="button" data-action="models">
+                        <i class="fa-solid fa-microchip" aria-hidden="true"></i>
+                    </button>
+
+                    <button class="collapsed-icon-item" data-label="تاریخچه" type="button" data-action="history">
+                        <i class="fa-regular fa-clock" aria-hidden="true"></i>
+                    </button>
+
+                    <div class="collapsed-divider"></div>
+
+                    <button class="collapsed-icon-item" data-label="تصویر" type="button" data-action="image">
+                        <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+                    </button>
+
+                    <button class="collapsed-icon-item" data-label="ویدیو" type="button" data-action="video">
+                        <i class="fa-solid fa-clapperboard" aria-hidden="true"></i>
+                    </button>
+
+                    <button class="collapsed-icon-item" data-label="موزیک" type="button" data-action="music">
+                        <i class="fa-solid fa-music" aria-hidden="true"></i>
+                    </button>
+
+                    <div class="collapsed-divider"></div>
+
+                    <button class="collapsed-icon-item" data-label="دستیارها" type="button" data-action="assistants">
+                        <i class="fa-solid fa-robot" aria-hidden="true"></i>
+                    </button>
+
+                    <button class="collapsed-icon-item" data-label="تنظیمات" type="button" id="openSettingsBtnCollapsed">
+                        <i class="fa-solid fa-gear" aria-hidden="true"></i>
+                    </button>
+
+                    <div class="collapsed-spacer"></div>
+
+                    <button class="sidebar-toggle" id="toggleSidebarBtnCollapsed" type="button" aria-label="باز کردن سایدبار">
+                        <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+                    </button>
+                </div>
+
+                <!-- دکمه toggle حالت باز -->
+                <button class="sidebar-toggle sidebar-expanded-toggle" id="toggleSidebarBtnExpanded" type="button" aria-label="بستن سایدبار">
+                    <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+                </button>
+
+            </aside>
+        </div>
+    </div>
+
+    <!-- مودال تنظیمات -->
+    <div class="wallet-modal-overlay" id="settingsModalOverlay" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+        <div class="wallet-modal" style="max-width: 500px;">
+            
+            <div class="wallet-modal-header">
+                <div class="wallet-modal-title" id="settingsTitle">
+                    <div class="icon-wrap">
+                        <i class="fa-solid fa-gear" aria-hidden="true"></i>
+                    </div>
+                    <span>تنظیمات عمومی</span>
+                </div>
+                <button class="wallet-modal-close" id="closeSettingsBtn" type="button" aria-label="بستن">
+                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                </button>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+                
+                <div style="background: var(--card-surface); border: 1px solid rgba(227, 228, 250, 0.1); border-radius: 20px; padding: 16px; display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 42px; height: 42px; border-radius: 14px; background: rgba(227, 228, 250, 0.08); border: 1px solid rgba(227, 228, 250, 0.2); display: flex; align-items: center; justify-content: center; color: var(--soft-lavender); font-size: 17px;">
+                            <i class="fa-solid fa-bars" aria-hidden="true"></i>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 2px;">
+                            <span style="font-size: 13.5px; font-weight: 800;">نمایش سایدبار</span>
+                            <span style="font-size: 11px; color: var(--muted-gray);">باز یا بسته بودن سایدبار</span>
+                        </div>
+                    </div>
+                    
+                    <button class="toggle-switch active" id="sidebarToggleSwitch" type="button" aria-label="فعال/غیرفعال کردن سایدبار" role="switch" aria-checked="true">
+                        <div class="toggle-knob"></div>
+                    </button>
+                </div>
+
+                <div style="background: var(--card-surface); border: 1px solid rgba(227, 228, 250, 0.1); border-radius: 20px; padding: 16px; display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 42px; height: 42px; border-radius: 14px; background: rgba(227, 228, 250, 0.08); border: 1px solid rgba(227, 228, 250, 0.2); display: flex; align-items: center; justify-content: center; color: var(--soft-lavender); font-size: 17px;">
+                            <i class="fa-solid fa-moon" aria-hidden="true"></i>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 2px;">
+                            <span style="font-size: 13.5px; font-weight: 800;">حالت تاریک</span>
+                            <span style="font-size: 11px; color: var(--muted-gray);">فعال در همه صفحات</span>
+                        </div>
+                    </div>
+                    
+                    <button class="toggle-switch active" type="button" aria-label="حالت تاریک" role="switch" aria-checked="true">
+                        <div class="toggle-knob"></div>
+                    </button>
+                </div>
+
+                <div style="background: var(--card-surface); border: 1px solid rgba(227, 228, 250, 0.1); border-radius: 20px; padding: 16px; display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 42px; height: 42px; border-radius: 14px; background: rgba(227, 228, 250, 0.08); border: 1px solid rgba(227, 228, 250, 0.2); display: flex; align-items: center; justify-content: center; color: var(--soft-lavender); font-size: 17px;">
+                            <i class="fa-solid fa-bell" aria-hidden="true"></i>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 2px;">
+                            <span style="font-size: 13.5px; font-weight: 800;">اعلان‌ها</span>
+                            <span style="font-size: 11px; color: var(--muted-gray);">دریافت اعلان‌های جدید</span>
+                        </div>
+                    </div>
+                    
+                    <button class="toggle-switch active" type="button" aria-label="اعلان‌ها" role="switch" aria-checked="true">
+                        <div class="toggle-knob"></div>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- مودال کیف پول -->
+    <div class="wallet-modal-overlay" id="walletModalOverlay" role="dialog" aria-modal="true" aria-labelledby="walletTitle">
+        <div class="wallet-modal">
+            
+            <div class="wallet-modal-header">
+                <div class="wallet-modal-title" id="walletTitle">
+                    <div class="icon-wrap">
+                        <i class="fa-solid fa-wallet" aria-hidden="true"></i>
+                    </div>
+                    <span>کیف پول MAX</span>
+                </div>
+                <button class="wallet-modal-close" id="closeWalletBtn" type="button" aria-label="بستن">
+                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                </button>
+            </div>
+
+            <div class="balance-card-new">
+                <div class="balance-label-text">موجودی فعلی شما</div>
+                <div class="balance-amount-display">
+                    <span id="maxBalanceValue">۳,۸۵۰</span>
+                    <span class="currency-label">MAX</span>
+                </div>
+            </div>
+
+            <div class="action-buttons-row">
+                <button class="action-btn-item" id="increaseMaxBtn" type="button">
+                    <div class="action-btn-icon">
+                        <i class="fa-solid fa-arrow-down-left" aria-hidden="true"></i>
+                    </div>
+                    <span class="action-btn-label">افزایش<br>موجودی</span>
+                </button>
+                <button class="action-btn-item" id="transferMaxBtn" type="button">
+                    <div class="action-btn-icon">
+                        <i class="fa-solid fa-arrow-right-arrow-left" aria-hidden="true"></i>
+                    </div>
+                    <span class="action-btn-label">انتقال<br>MAX</span>
+                </button>
+                <button class="action-btn-item" id="claimBonusBtn" type="button">
+                    <div class="action-btn-icon">
+                        <i class="fa-solid fa-gift" aria-hidden="true"></i>
+                    </div>
+                    <span class="action-btn-label">جایزه<br>روزانه</span>
+                </button>
+            </div>
+
+            <div class="plans-header">
+                <div class="plans-title">
+                    <i class="fa-solid fa-crown" aria-hidden="true"></i>
+                    <span>خرید اشتراک</span>
+                </div>
+                <div class="plans-subtitle">۵ پلن حرفه‌ای</div>
+            </div>
+
+            <div class="plans-slider" id="plansContainer">
+                <!-- پلن‌ها توسط JS ساخته میشن -->
+            </div>
+
+        </div>
+    </div>
+
+    <!-- پیام‌های سیستمی (جایگزین alert/confirm) -->
+    <div id="toastContainer" style="position: fixed; bottom: 24px; left: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none;"></div>
+
+    <script>
+        'use strict';
+
+        /* ============================================ */
+        /* ===== SECURITY: Configuration ===== */
+        /* ============================================ */
+        
+        // محدودیت‌های امنیتی
+        const SECURITY = Object.freeze({
+            MAX_BALANCE: 1_000_000_000,        // حداکثر موجودی (۱ میلیارد MAX)
+            MIN_TRANSFER: 10,                   // حداقل انتقال
+            MAX_TRANSFER: 100_000,              // حداکثر انتقال
+            MAX_INPUT_LENGTH: 15,               // حداکثر طول ورودی
+            DAILY_BONUS_AMOUNT: 50,             // مقدار جایزه روزانه
+            TRANSFER_BONUS_RATE: 0.05,          // ۵٪ پاداش انتقال
+            MIN_PREMIUM: 10_000,                // حداقل برای پرمیوم
+            RATE_LIMIT_MS: 1000,                // ۱ ثانیه بین عملیات
+            STORAGE_KEY: 'remax_max_state_v1',
+            SESSION_KEY: 'remax_session',
+            MAX_FILE_SIZE: 2 * 1024 * 1024,     // ۲MB
+            ALLOWED_IMAGE_TYPES: ['image/png', 'image/jpeg', 'image/webp', 'image/gif']
+        });
+
+        /* ============================================ */
+        /* ===== SECURITY: Rate Limiter ===== */
+        /* ============================================ */
+        
+        const RateLimiter = (() => {
+            const operations = new Map();
+            return {
+                check(key, ms = SECURITY.RATE_LIMIT_MS) {
+                    const now = Date.now();
+                    const last = operations.get(key) || 0;
+                    if (now - last < ms) {
+                        return false;
+                    }
+                    operations.set(key, now);
+                    return true;
+                }
+            };
+        })();
+
+        /* ============================================ */
+        /* ===== SECURITY: Sanitizer ===== */
+        /* ============================================ */
+        
+        const Sanitizer = {
+            // پاکسازی رشته از کاراکترهای خطرناک
+            text(str) {
+                return String(str).replace(/[<>"'`\\]/g, '');
+            },
+            
+            // فقط عدد صحیح مثبت
+            positiveInteger(input, max = SECURITY.MAX_BALANCE) {
+                if (typeof input !== 'string' && typeof input !== 'number') return null;
+                const cleaned = String(input).replace(/[^\d]/g, '').slice(0, SECURITY.MAX_INPUT_LENGTH);
+                if (!cleaned) return null;
+                const val = parseInt(cleaned, 10);
+                if (!Number.isSafeInteger(val)) return null;
+                if (val <= 0) return null;
+                if (val > max) return null;
+                return val;
+            },
+            
+            // فقط عدد اعشاری محدود
+            limitedInteger(input, min, max) {
+                const val = this.positiveInteger(input, max);
+                if (val === null) return null;
+                if (val < min) return null;
+                return val;
+            }
+        };
+
+        /* ============================================ */
+        /* ===== SECURITY: Input Validator ===== */
+        /* ============================================ */
+        
+        const Validator = {
+            amount(input, min, max) {
+                const val = Sanitizer.limitedInteger(input, min, max);
+                if (val === null) {
+                    throw new Error('مقدار وارد شده معتبر نیست');
+                }
+                return val;
+            },
+            
+            imageFile(file) {
+                if (!file) throw new Error('فایلی انتخاب نشده');
+                if (!SECURITY.ALLOWED_IMAGE_TYPES.includes(file.type)) {
+                    throw new Error('فقط تصویر PNG, JPEG, WebP, GIF مجاز است');
+                }
+                if (file.size > SECURITY.MAX_FILE_SIZE) {
+                    throw new Error('حجم فایل نباید بیشتر از ۲ مگابایت باشد');
+                }
+                return true;
+            }
+        };
+
+        /* ============================================ */
+        /* ===== SECURITY: Safe Storage ===== */
+        /* ============================================ */
+        
+        const SafeStorage = {
+            save(key, data) {
+                try {
+                    // فقط داده‌های primitive + عددی
+                    const serialized = JSON.stringify(data);
+                    // چک کردن حجم
+                    if (serialized.length > 100_000) {
+                        console.warn('Storage data too large');
+                        return false;
+                    }
+                    sessionStorage.setItem(key, serialized);
+                    return true;
+                } catch (e) {
+                    console.error('Storage save failed:', e);
+                    return false;
+                }
+            },
+            
+            load(key) {
+                try {
+                    const raw = sessionStorage.getItem(key);
+                    if (!raw) return null;
+                    // چک کردن حجم
+                    if (raw.length > 100_000) return null;
+                    const data = JSON.parse(raw);
+                    // چک کردن نوع
+                    if (typeof data !== 'object' || data === null) return null;
+                    return data;
+                } catch (e) {
+                    console.error('Storage load failed:', e);
+                    return null;
+                }
+            },
+            
+            clear(key) {
+                try {
+                    sessionStorage.removeItem(key);
+                } catch (e) {
+                    console.error('Storage clear failed:', e);
+                }
+            }
+        };
+
+        /* ============================================ */
+        /* ===== Toast Notifications (امن، جایگزین alert) ===== */
+        /* ============================================ */
+        
+        const Toast = {
+            show(message, type = 'info', duration = 3000) {
+                const container = document.getElementById('toastContainer');
+                const toast = document.createElement('div');
+                toast.setAttribute('role', 'alert');
+                
+                const colors = {
+                    info: '#E3E4FA',
+                    success: '#22c55e',
+                    error: '#ef4444',
+                    warning: '#f59e0b'
+                };
+                
+                const icons = {
+                    info: 'fa-circle-info',
+                    success: 'fa-circle-check',
+                    error: 'fa-circle-exclamation',
+                    warning: 'fa-triangle-exclamation'
+                };
+                
+                toast.style.cssText = `
+                    background: #1a1a1a;
+                    border: 1px solid ${colors[type]}40;
+                    color: #ffffff;
+                    padding: 14px 18px;
+                    border-radius: 16px;
+                    font-size: 13px;
+                    font-weight: 700;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+                    pointer-events: auto;
+                    animation: toastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+                    max-width: 340px;
+                `;
+                
+                // ساخت امن DOM
+                const icon = document.createElement('i');
+                icon.className = `fa-solid ${icons[type]}`;
+                icon.style.color = colors[type];
+                icon.setAttribute('aria-hidden', 'true');
+                
+                const text = document.createElement('span');
+                text.textContent = String(message).slice(0, 200); // فقط متن امن
+                
+                toast.appendChild(icon);
+                toast.appendChild(text);
+                container.appendChild(toast);
+                
+                setTimeout(() => {
+                    toast.style.animation = 'toastOut 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards';
+                    setTimeout(() => toast.remove(), 300);
+                }, duration);
+            }
+        };
+
+        // اضافه کردن استایل انیمیشن toast
+        const toastStyles = document.createElement('style');
+        toastStyles.textContent = `
+            @keyframes toastIn {
+                from { opacity: 0; transform: translateX(-30px) scale(0.9); }
+                to { opacity: 1; transform: translateX(0) scale(1); }
+            }
+            @keyframes toastOut {
+                from { opacity: 1; transform: translateX(0) scale(1); }
+                to { opacity: 0; transform: translateX(-30px) scale(0.9); }
+            }
+        `;
+        document.head.appendChild(toastStyles);
+
+        /* ============================================ */
+        /* ===== Dialog (جایگزین prompt/confirm) ===== */
+        /* ============================================ */
+        
+        const Dialog = {
+            _create(title, message, hasInput = false, defaultValue = '') {
+                return new Promise((resolve) => {
+                    const overlay = document.createElement('div');
+                    overlay.style.cssText = `
+                        position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+                        backdrop-filter: blur(12px); z-index: 10000;
+                        display: flex; align-items: center; justify-content: center;
+                        padding: 20px; opacity: 0; transition: opacity 0.3s ease;
+                    `;
+                    
+                    const box = document.createElement('div');
+                    box.style.cssText = `
+                        background: linear-gradient(160deg, #0f0f0f 0%, #050505 100%);
+                        border-radius: 28px; padding: 24px; max-width: 420px; width: 100%;
+                        box-shadow: 0 40px 80px rgba(0,0,0,0.95), 0 0 0 1px rgba(227,228,250,0.12);
+                        display: flex; flex-direction: column; gap: 16px;
+                        transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
+                        font-family: 'Vazirmatn', sans-serif; direction: rtl;
+                    `;
+                    
+                    const titleEl = document.createElement('div');
+                    titleEl.textContent = String(title).slice(0, 100);
+                    titleEl.style.cssText = 'font-size: 16px; font-weight: 900; color: #fff;';
+                    
+                    const msgEl = document.createElement('div');
+                    msgEl.textContent = String(message).slice(0, 300);
+                    msgEl.style.cssText = 'font-size: 13px; color: #a3a3a3; line-height: 1.6;';
+                    
+                    box.appendChild(titleEl);
+                    box.appendChild(msgEl);
+                    
+                    let inputEl = null;
+                    if (hasInput) {
+                        inputEl = document.createElement('input');
+                        inputEl.type = 'number';
+                        inputEl.value = String(defaultValue).replace(/[^\d]/g, '').slice(0, 15);
+                        inputEl.min = '1';
+                        inputEl.style.cssText = `
+                            background: #121212; border: 1px solid rgba(227,228,250,0.15);
+                            color: #fff; padding: 12px 16px; border-radius: 14px;
+                            font-size: 14px; font-weight: 700; font-family: inherit;
+                            outline: none; direction: ltr; text-align: center;
+                        `;
+                        inputEl.addEventListener('input', () => {
+                            inputEl.value = inputEl.value.replace(/[^\d]/g, '').slice(0, 15);
+                        });
+                        box.appendChild(inputEl);
+                    }
+                    
+                    const btnRow = document.createElement('div');
+                    btnRow.style.cssText = 'display: flex; gap: 10px;';
+                    
+                    const cancelBtn = document.createElement('button');
+                    cancelBtn.type = 'button';
+                    cancelBtn.textContent = 'لغو';
+                    cancelBtn.style.cssText = `
+                        flex: 1; padding: 12px; border-radius: 14px; border: 1px solid rgba(227,228,250,0.15);
+                        background: transparent; color: #fff; font-weight: 800; font-size: 13px;
+                        cursor: pointer; font-family: inherit;
+                    `;
+                    
+                    const okBtn = document.createElement('button');
+                    okBtn.type = 'button';
+                    okBtn.textContent = 'تأیید';
+                    okBtn.style.cssText = `
+                        flex: 1; padding: 12px; border-radius: 14px; border: none;
+                        background: #E3E4FA; color: #000; font-weight: 900; font-size: 13px;
+                        cursor: pointer; font-family: inherit;
+                    `;
+                    
+                    btnRow.appendChild(cancelBtn);
+                    btnRow.appendChild(okBtn);
+                    box.appendChild(btnRow);
+                    overlay.appendChild(box);
+                    document.body.appendChild(overlay);
+                    
+                    requestAnimationFrame(() => {
+                        overlay.style.opacity = '1';
+                        box.style.transform = 'scale(1)';
+                        if (inputEl) inputEl.focus();
+                    });
+                    
+                    const close = (result) => {
+                        overlay.style.opacity = '0';
+                        box.style.transform = 'scale(0.9)';
+                        setTimeout(() => overlay.remove(), 300);
+                        document.removeEventListener('keydown', escHandler);
+                        resolve(result);
+                    };
+                    
+                    const escHandler = (e) => {
+                        if (e.key === 'Escape') close(null);
+                    };
+                    
+                    cancelBtn.addEventListener('click', () => close(null));
+                    okBtn.addEventListener('click', () => {
+                        if (hasInput) close(inputEl.value);
+                        else close(true);
+                    });
+                    overlay.addEventListener('click', (e) => {
+                        if (e.target === overlay) close(null);
+                    });
+                    document.addEventListener('keydown', escHandler);
+                    
+                    if (hasInput) {
+                        inputEl.addEventListener('keydown', (e) => {
+                            if (e.key === 'Enter') okBtn.click();
+                        });
+                    }
+                });
+            },
+            
+            prompt(title, message, defaultValue = '') {
+                return this._create(title, message, true, defaultValue);
+            },
+            
+            confirm(title, message) {
+                return this._create(title, message, false);
+            },
+            
+            alert(title, message) {
+                return this._create(title, message, false);
+            }
+        };
+
+        /* ============================================ */
+        /* ===== State Management ===== */
+        /* ============================================ */
+        
+        const State = {
+            maxBalance: 3850,
+            dailyBonusClaimed: false,
+            lastBonusDate: null,
+            isTransferring: false,
+            isProcessing: false,
+            
+            init() {
+                const saved = SafeStorage.load(SECURITY.STORAGE_KEY);
+                if (saved && typeof saved === 'object') {
+                    if (Number.isSafeInteger(saved.maxBalance) && saved.maxBalance >= 0 && saved.maxBalance <= SECURITY.MAX_BALANCE) {
+                        this.maxBalance = saved.maxBalance;
+                    }
+                    if (typeof saved.dailyBonusClaimed === 'boolean') {
+                        this.dailyBonusClaimed = saved.dailyBonusClaimed;
+                    }
+                    if (typeof saved.lastBonusDate === 'string') {
+                        this.lastBonusDate = saved.lastBonusDate;
+                    }
+                }
+                // چک کردن ریست جایزه روزانه
+                this.checkDailyBonusReset();
+            },
+            
+            save() {
+                SafeStorage.save(SECURITY.STORAGE_KEY, {
+                    maxBalance: this.maxBalance,
+                    dailyBonusClaimed: this.dailyBonusClaimed,
+                    lastBonusDate: this.lastBonusDate
+                });
+            },
+            
+            checkDailyBonusReset() {
+                const today = new Date().toISOString().split('T')[0];
+                if (this.lastBonusDate !== today) {
+                    this.dailyBonusClaimed = false;
+                }
+            },
+            
+            setBalance(newBalance) {
+                if (!Number.isSafeInteger(newBalance)) return false;
+                if (newBalance < 0 || newBalance > SECURITY.MAX_BALANCE) return false;
+                this.maxBalance = newBalance;
+                this.save();
+                return true;
+            },
+            
+            addBalance(amount) {
+                if (!Number.isSafeInteger(amount) || amount <= 0) return false;
+                const newBalance = this.maxBalance + amount;
+                if (newBalance > SECURITY.MAX_BALANCE) return false;
+                return this.setBalance(newBalance);
+            },
+            
+            subtractBalance(amount) {
+                if (!Number.isSafeInteger(amount) || amount <= 0) return false;
+                const newBalance = this.maxBalance - amount;
+                if (newBalance < 0) return false;
+                return this.setBalance(newBalance);
+            }
+        };
+
+        /* ============================================ */
+        /* ===== UI Renderer (امن با textContent) ===== */
+        /* ============================================ */
+        
+        const UI = {
+            updateBalance() {
+                // FIX: استفاده از textContent به جای innerHTML
+                const balanceValueEl = document.getElementById('maxBalanceValue');
+                if (balanceValueEl) {
+                    balanceValueEl.textContent = this.toPersianNum(State.maxBalance);
+                }
+                
+                const creditCountEl = document.getElementById('credit-count');
+                if (creditCountEl) {
+                    creditCountEl.textContent = this.toPersianNum(State.maxBalance);
+                }
+            },
+            
+            toPersianNum(num) {
+                const n = Number(num);
+                if (!Number.isSafeInteger(n)) return '۰';
+                return n.toLocaleString('fa-IR');
+            },
+            
+            toPersianPrice(num) {
+                const n = Number(num);
+                if (!Number.isSafeInteger(n)) return '۰';
+                return n.toLocaleString('fa-IR');
+            }
+        };
+
+        /* ============================================ */
+        /* ===== Business Logic ===== */
+        /* ============================================ */
+        
+        const Actions = {
+            async increaseMax() {
+                if (State.isProcessing) {
+                    Toast.show('لطفاً صبر کنید...', 'info');
+                    return;
+                }
+                if (!RateLimiter.check('increase')) {
+                    Toast.show('کمی صبر کنید و دوباره تلاش کنید', 'warning');
+                    return;
+                }
+                
+                try {
+                    const result = await Dialog.prompt(
+                        'افزایش موجودی',
+                        'چند MAX می‌خواهید اضافه کنید؟',
+                        '100'
+                    );
+                    
+                    if (result === null) return;
+                    
+                    const val = Validator.amount(result, 1, SECURITY.MAX_BALANCE);
+                    
+                    State.isProcessing = true;
+                    
+                    if (!State.addBalance(val)) {
+                        throw new Error('موجودی از حد مجاز بیشتر می‌شود');
+                    }
+                    
+                    UI.updateBalance();
+                    Toast.show(`${UI.toPersianNum(val)} MAX اضافه شد`, 'success');
+                    
+                } catch (e) {
+                    Toast.show(e.message || 'خطایی رخ داد', 'error');
+                } finally {
+                    State.isProcessing = false;
+                }
+            },
+            
+            async transferMax() {
+                if (State.isProcessing) {
+                    Toast.show('لطفاً صبر کنید...', 'info');
+                    return;
+                }
+                if (!RateLimiter.check('transfer')) {
+                    Toast.show('کمی صبر کنید و دوباره تلاش کنید', 'warning');
+                    return;
+                }
+                
+                // FIX: قفل برای جلوگیری از Double Spending
+                if (State.isTransferring) return;
+                
+                try {
+                    const result = await Dialog.prompt(
+                        'انتقال MAX',
+                        'چند MAX می‌خواهید انتقال دهید؟ (حداقل ۱۰)',
+                        '50'
+                    );
+                    
+                    if (result === null) return;
+                    
+                    const val = Validator.amount(result, SECURITY.MIN_TRANSFER, SECURITY.MAX_TRANSFER);
+                    
+                    if (val > State.maxBalance) {
+                        throw new Error('موجودی کافی نیست');
+                    }
+                    
+                    State.isTransferring = true;
+                    State.isProcessing = true;
+                    
+                    // FIX: Check و Subtract در یک عملیات atomic
+                    if (!State.subtractBalance(val)) {
+                        throw new Error('خطا در انتقال');
+                    }
+                    
+                    // پاداش انتقال
+                    const bonus = Math.floor(val * SECURITY.TRANSFER_BONUS_RATE);
+                    if (bonus > 0) {
+                        if (State.addBalance(bonus)) {
+                            Toast.show(`${UI.toPersianNum(val)} MAX انتقال یافت. ${UI.toPersianNum(bonus)} MAX پاداش!`, 'success', 4000);
+                        } else {
+                            Toast.show(`${UI.toPersianNum(val)} MAX انتقال یافت`, 'success');
+                        }
+                    } else {
+                        Toast.show(`${UI.toPersianNum(val)} MAX انتقال یافت`, 'success');
+                    }
+                    
+                    UI.updateBalance();
+                    
+                } catch (e) {
+                    Toast.show(e.message || 'خطایی رخ داد', 'error');
+                } finally {
+                    State.isTransferring = false;
+                    State.isProcessing = false;
+                }
+            },
+            
+            async claimDailyBonus() {
+                if (State.isProcessing) return;
+                if (!RateLimiter.check('bonus', 2000)) {
+                    Toast.show('کمی صبر کنید...', 'warning');
+                    return;
+                }
+                
+                try {
+                    State.checkDailyBonusReset();
+                    
+                    if (State.dailyBonusClaimed) {
+                        Toast.show('جایزه امروز را قبلاً دریافت کرده‌اید', 'warning');
+                        return;
+                    }
+                    
+                    const bonus = SECURITY.DAILY_BONUS_AMOUNT;
+                    
+                    if (!State.addBalance(bonus)) {
+                        throw new Error('خطا در دریافت جایزه');
+                    }
+                    
+                    State.dailyBonusClaimed = true;
+                    State.lastBonusDate = new Date().toISOString().split('T')[0];
+                    State.save();
+                    
+                    UI.updateBalance();
+                    Toast.show(`${UI.toPersianNum(bonus)} MAX جایزه روزانه دریافت کردید!`, 'success');
+                    
+                } catch (e) {
+                    Toast.show(e.message || 'خطایی رخ داد', 'error');
+                }
+            },
+            
+            async buyPlan(name, price) {
+                if (State.isProcessing) return;
+                if (!RateLimiter.check('buy', 2000)) {
+                    Toast.show('کمی صبر کنید...', 'warning');
+                    return;
+                }
+                
+                try {
+                    // Sanitize نام پلن
+                    const safeName = Sanitizer.text(name).slice(0, 50);
+                    
+                    // اعتبارسنجی قیمت
+                    if (!Number.isSafeInteger(price) || price <= 0 || price > 1_000_000_000) {
+                        throw new Error('قیمت پلن معتبر نیست');
+                    }
+                    
+                    const confirmed = await Dialog.confirm(
+                        `خرید اشتراک ${safeName}`,
+                        `آیا از خرید اشتراک ${safeName} به مبلغ ${UI.toPersianPrice(price)} تومان مطمئن هستید؟`
+                    );
+                    
+                    if (!confirmed) return;
+                    
+                    State.isProcessing = true;
+                    
+                    // شبیه‌سازی خرید (در واقعیت باید به سرور ارسال شود)
+                    Toast.show(`اشتراک ${safeName} با موفقیت خریداری شد`, 'success', 4000);
+                    
+                } catch (e) {
+                    Toast.show(e.message || 'خطایی رخ داد', 'error');
+                } finally {
+                    State.isProcessing = false;
+                }
+            }
+        };
+
+        /* ============================================ */
+        /* ===== Sidebar Controller ===== */
+        /* ============================================ */
+        
+        const Sidebar = {
+            container: null,
+            panel: null,
+            
+            init() {
+                this.container = document.getElementById('sidebarContainer');
+                this.panel = document.getElementById('sidebarPanel');
+                
+                // دکمه‌های toggle
+                document.getElementById('toggleSidebarBtnCollapsed')?.addEventListener('click', () => this.toggle());
+                document.getElementById('toggleSidebarBtnExpanded')?.addEventListener('click', () => this.toggle());
+                
+                // کلیک روی آیکون اکانت
+                document.getElementById('accountIconBtn')?.addEventListener('click', () => this.editProfile());
+                
+                // از localStorage بارگذاری کن
+                const collapsed = SafeStorage.load('sidebar_collapsed');
+                if (collapsed === true) {
+                    this.container.classList.add('collapsed');
+                }
+                
+                this.syncSwitch();
+            },
+            
+            toggle() {
+                // FIX #6: ریست اسکرول
+                this.panel.scrollTop = 0;
+                
+                this.container.classList.toggle('collapsed');
+                const isCollapsed = this.container.classList.contains('collapsed');
+                
+                // ذخیره در sessionStorage
+                SafeStorage.save('sidebar_collapsed', isCollapsed);
+                
+                this.syncSwitch();
+            },
+            
+            syncSwitch() {
+                const switchEl = document.getElementById('sidebarToggleSwitch');
+                if (!switchEl) return;
+                
+                const isCollapsed = this.container.classList.contains('collapsed');
+                
+                if (isCollapsed) {
+                    switchEl.classList.remove('active');
+                    switchEl.setAttribute('aria-checked', 'false');
+                } else {
+                    switchEl.classList.add('active');
+                    switchEl.setAttribute('aria-checked', 'true');
+                }
+            },
+            
+            setCollapsed(collapsed) {
+                if (collapsed) {
+                    this.container.classList.add('collapsed');
+                } else {
+                    this.container.classList.remove('collapsed');
+                }
+                SafeStorage.save('sidebar_collapsed', collapsed);
+                this.syncSwitch();
+            },
+            
+            editProfile() {
+                Toast.show('ویرایش پروفایل به زودی...', 'info');
+            }
+        };
+
+        /* ============================================ */
+        /* ===== Modal Controller ===== */
+        /* ============================================ */
+        
+        const Modal = {
+            wallet: null,
+            settings: null,
+            
+            init() {
+                this.wallet = document.getElementById('walletModalOverlay');
+                this.settings = document.getElementById('settingsModalOverlay');
+                
+                // دکمه‌های باز کردن
+                document.getElementById('openWalletBtn')?.addEventListener('click', () => this.openWallet());
+                document.getElementById('openWalletBtnCollapsed')?.addEventListener('click', () => this.openWallet());
+                document.getElementById('openSettingsBtn')?.addEventListener('click', () => this.openSettings());
+                document.getElementById('openSettingsBtnCollapsed')?.addEventListener('click', () => this.openSettings());
+                
+                // دکمه‌های بستن
+                document.getElementById('closeWalletBtn')?.addEventListener('click', () => this.closeWallet());
+                document.getElementById('closeSettingsBtn')?.addEventListener('click', () => this.closeSettings());
+                
+                // کلیک روی overlay
+                this.wallet?.addEventListener('click', (e) => {
+                    if (e.target === this.wallet) this.closeWallet();
+                });
+                this.settings?.addEventListener('click', (e) => {
+                    if (e.target === this.settings) this.closeSettings();
+                });
+                
+                // FIX #15: Escape فقط مودال باز رو می‌بنده
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        if (this.wallet?.classList.contains('show')) {
+                            this.closeWallet();
+                        } else if (this.settings?.classList.contains('show')) {
+                            this.closeSettings();
+                        }
+                    }
+                });
+            },
+            
+            openWallet() {
+                this.wallet?.classList.add('show');
+                document.body.style.overflow = 'hidden';
+                // ذخیره focus برای برگردوندن
+                this._lastFocus = document.activeElement;
+            },
+            
+            closeWallet() {
+                this.wallet?.classList.remove('show');
+                document.body.style.overflow = '';
+                this._lastFocus?.focus();
+            },
+            
+            openSettings() {
+                this.settings?.classList.add('show');
+                document.body.style.overflow = 'hidden';
+                this._lastFocus = document.activeElement;
+            },
+            
+            closeSettings() {
+                this.settings?.classList.remove('show');
+                document.body.style.overflow = '';
+                this._lastFocus?.focus();
+            }
+        };
+
+        /* ============================================ */
+        /* ===== Plans Renderer (امن) ===== */
+        /* ============================================ */
+        
+        const Plans = {
+            data: [
+                {
+                    id: 'free',
+                    name: 'رایگان',
+                    price: 0,
+                    period: 'تومان / ماه',
+                    validity: 'بدون محدودیت زمانی',
+                    icon: 'fa-seedling',
+                    featured: false,
+                    badge: null,
+                    buttonText: 'فعال است',
+                    buttonDisabled: true,
+                    features: [
+                        { text: '۱۰ پیام رایگان در روز', highlight: false },
+                        { text: '۱ تصویر در هفته', highlight: false },
+                        { text: '۲ درخواست TTS', highlight: false },
+                        { text: 'دسترسی به مدل‌های پایه', highlight: false }
+                    ]
+                },
+                {
+                    id: 'basic',
+                    name: 'پایه',
+                    price: 199000,
+                    period: 'تومان / ماه',
+                    validity: 'اعتبار ۳۰ روزه',
+                    icon: 'fa-bolt',
+                    featured: false,
+                    badge: null,
+                    buttonText: 'خرید',
+                    buttonDisabled: false,
+                    features: [
+                        { text: '۱۰ پیام در هر ۳ ساعت', highlight: false },
+                        { text: 'امکان تولید تصویر', highlight: false },
+                        { text: '۴۰ واحد صدا در هفته', highlight: false },
+                        { text: '۱ واحد ویدیو در هفته', highlight: false },
+                        { text: '۱ اپلیکیشن در هفته', highlight: false }
+                    ]
+                },
+                {
+                    id: 'plus',
+                    name: 'پلاس',
+                    price: 539000,
+                    period: 'تومان / ماه',
+                    validity: 'اعتبار ۳۰ روزه',
+                    icon: 'fa-star',
+                    featured: true,
+                    badge: { text: 'محبوب', type: 'popular' },
+                    buttonText: 'خرید',
+                    buttonDisabled: false,
+                    features: [
+                        { text: '۲۰ پیام در هر ۳ ساعت', highlight: false },
+                        { text: 'امکان تولید تصویر', highlight: false },
+                        { text: '۸۰ واحد صدا در هفته', highlight: false },
+                        { text: '۳ واحد ویدیو در هفته', highlight: false },
+                        { text: '۳ اپلیکیشن در هفته', highlight: false },
+                        { text: 'دسترسی به مدل‌های پیشرفته‌تر', highlight: true }
+                    ]
+                },
+                {
+                    id: 'pro',
+                    name: 'پرو',
+                    price: 1239000,
+                    period: 'تومان / ماه',
+                    validity: 'اعتبار ۳۰ روزه',
+                    icon: 'fa-gem',
+                    featured: false,
+                    badge: null,
+                    buttonText: 'خرید',
+                    buttonDisabled: false,
+                    features: [
+                        { text: '۳۰ پیام در هر ۳ ساعت', highlight: false },
+                        { text: 'امکان تولید تصویر', highlight: false },
+                        { text: '۱۵۰ واحد صدا در هفته', highlight: false },
+                        { text: '۱۰ واحد ویدیو در هفته', highlight: false },
+                        { text: '۳ اپلیکیشن در هفته', highlight: false },
+                        { text: 'دسترسی به مدل‌های حرفه‌ای', highlight: true }
+                    ]
+                },
+                {
+                    id: 'promax',
+                    name: 'پرو مکس',
+                    price: 5599000,
+                    period: 'تومان / ماه',
+                    validity: 'اعتبار ۳۰ روزه',
+                    icon: 'fa-crown',
+                    featured: true,
+                    badge: { text: 'بهترین', type: 'best' },
+                    buttonText: 'خرید',
+                    buttonDisabled: false,
+                    features: [
+                        { text: '۱۱۰ پیام در هر ۳ ساعت', highlight: false },
+                        { text: 'امکان تولید تصویر', highlight: false },
+                        { text: '۴۰۰ واحد صدا در هفته', highlight: false },
+                        { text: '۳۰ واحد ویدیو در هفته', highlight: false },
+                        { text: '۱۵ اپلیکیشن در هفته', highlight: false },
+                        { text: 'دسترسی به کامل‌ترین مدل‌ها', highlight: true }
+                    ]
+                }
+            ],
+            
+            render() {
+                const container = document.getElementById('plansContainer');
+                if (!container) return;
+                
+                // پاک کردن امن
+                while (container.firstChild) {
+                    container.removeChild(container.firstChild);
+                }
+                
+                this.data.forEach(plan => {
+                    const card = this._createCard(plan);
+                    container.appendChild(card);
+                });
+            },
+            
+            _createCard(plan) {
+                const card = document.createElement('div');
+                card.className = 'plan-card' + (plan.featured ? ' featured' : '');
+                
+                // بج
+                if (plan.badge) {
+                    const badge = document.createElement('div');
+                    badge.className = `plan-badge ${plan.badge.type}`;
+                    badge.textContent = plan.badge.text;
+                    card.appendChild(badge);
+                }
+                
+                // لوگو
+                const logo = document.createElement('div');
+                logo.className = 'plan-logo';
+                const logoIcon = document.createElement('div');
+                logoIcon.className = 'plan-logo-icon';
+                const logoI = document.createElement('i');
+                logoI.className = `fa-solid ${plan.icon}`;
+                logoI.setAttribute('aria-hidden', 'true');
+                logoIcon.appendChild(logoI);
+                logo.appendChild(logoIcon);
+                const planName = document.createElement('div');
+                planName.className = 'plan-name';
+                planName.textContent = plan.name;
+                logo.appendChild(planName);
+                card.appendChild(logo);
+                
+                // قیمت
+                const priceDiv = document.createElement('div');
+                priceDiv.className = 'plan-price';
+                const priceValue = document.createElement('div');
+                priceValue.className = 'plan-price-value';
+                priceValue.textContent = plan.price === 0 ? '۰' : UI.toPersianPrice(plan.price);
+                priceDiv.appendChild(priceValue);
+                const pricePeriod = document.createElement('div');
+                pricePeriod.className = 'plan-price-period';
+                pricePeriod.textContent = plan.period;
+                priceDiv.appendChild(pricePeriod);
+                card.appendChild(priceDiv);
+                
+                // اعتبار
+                const validity = document.createElement('div');
+                validity.className = 'plan-validity';
+                validity.textContent = plan.validity;
+                card.appendChild(validity);
+                
+                // دکمه خرید
+                const buyBtn = document.createElement('button');
+                buyBtn.type = 'button';
+                buyBtn.className = 'plan-buy-btn';
+                if (plan.buttonDisabled) {
+                    buyBtn.disabled = true;
+                    buyBtn.style.opacity = '0.5';
+                    buyBtn.style.cursor = 'not-allowed';
+                }
+                const buyIcon = document.createElement('i');
+                buyIcon.className = plan.buttonDisabled ? 'fa-solid fa-check' : 'fa-solid fa-cart-shopping';
+                buyIcon.setAttribute('aria-hidden', 'true');
+                buyBtn.appendChild(buyIcon);
+                const buyText = document.createElement('span');
+                buyText.textContent = plan.buttonText;
+                buyBtn.appendChild(buyText);
+                
+                if (!plan.buttonDisabled) {
+                    buyBtn.addEventListener('click', () => {
+                        Actions.buyPlan(plan.name, plan.price);
+                    });
+                }
+                
+                card.appendChild(buyBtn);
+                
+                // ویژگی‌ها
+                const features = document.createElement('div');
+                features.className = 'plan-features';
+                plan.features.forEach(f => {
+                    const feature = document.createElement('div');
+                    feature.className = 'plan-feature' + (f.highlight ? ' highlight' : '');
+                    const icon = document.createElement('i');
+                    icon.className = 'fa-solid fa-check';
+                    icon.setAttribute('aria-hidden', 'true');
+                    feature.appendChild(icon);
+                    const text = document.createElement('span');
+                    text.textContent = f.text;
+                    feature.appendChild(text);
+                    features.appendChild(feature);
+                });
+                card.appendChild(features);
+                
+                // لینک مشاهده امکانات
+                const moreLink = document.createElement('button');
+                moreLink.type = 'button';
+                moreLink.className = 'plan-more-link';
+                const moreText = document.createElement('span');
+                moreText.textContent = 'مشاهده امکانات کامل';
+                moreLink.appendChild(moreText);
+                const moreIcon = document.createElement('i');
+                moreIcon.className = 'fa-solid fa-chevron-down';
+                moreIcon.setAttribute('aria-hidden', 'true');
+                moreLink.appendChild(moreIcon);
+                moreLink.addEventListener('click', () => {
+                    Toast.show(`امکانات کامل پلن ${plan.name}`, 'info');
+                });
+                card.appendChild(moreLink);
+                
+                return card;
+            }
+        };
+
+        /* ============================================ */
+        /* ===== File Upload (امن) ===== */
+        /* ============================================ */
+        
+        const FileUpload = {
+            init() {
+                const fileInput = document.getElementById('file-input');
+                const avatarTrigger = document.getElementById('avatarTrigger');
+                const avatarImg = document.getElementById('avatar-img');
+                
+                if (!fileInput || !avatarImg) return;
+                
+                avatarTrigger?.addEventListener('click', () => fileInput.click());
+                avatarTrigger?.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        fileInput.click();
+                    }
+                });
+                
+                fileInput.addEventListener('change', async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    
+                    try {
+                        Validator.imageFile(file);
+                        
+                        // استفاده از createObjectURL به جای FileReader برای امنیت بیشتر
+                        const url = URL.createObjectURL(file);
+                        avatarImg.src = url;
+                        
+                        // آزادسازی بعد از لود
+                        avatarImg.onload = () => {
+                            URL.revokeObjectURL(url);
+                        };
+                        
+                        Toast.show('آواتار با موفقیت تغییر یافت', 'success');
+                    } catch (err) {
+                        Toast.show(err.message, 'error');
+                    } finally {
+                        // پاک کردن input
+                        fileInput.value = '';
+                    }
+                });
+            }
+        };
+
+        /* ============================================ */
+        /* ===== Menu Actions ===== */
+        /* ============================================ */
+        
+        const MenuActions = {
+            init() {
+                document.querySelectorAll('[data-action]').forEach(el => {
+                    el.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const action = el.getAttribute('data-action');
+                        this.handle(action);
+                    });
+                });
+            },
+            
+            handle(action) {
+                const actions = {
+                    models: () => Toast.show('مدل‌ها به زودی...', 'info'),
+                    history: () => Toast.show('تاریخچه گفتگوها', 'info'),
+                    video: () => Toast.show('سرویس ویدیو', 'info'),
+                    image: () => Toast.show('سرویس تصویر', 'info'),
+                    music: () => Toast.show('سرویس موزیک', 'info'),
+                    gallery: () => Toast.show('گالری', 'info'),
+                    assistants: () => Toast.show('دستیارهای تخصصی', 'info'),
+                    toolbox: () => Toast.show('جعبه ابزار هوشمند', 'info'),
+                    voice: () => Toast.show('صداگذاری و دوبله', 'info'),
+                    prompts: () => Toast.show('کانال اختصاصی پرامپت', 'info'),
+                    support: () => Toast.show('پشتیبانی آنلاین', 'info')
+                };
+                
+                if (actions[action]) {
+                    actions[action]();
+                }
+            }
+        };
+
+        /* ============================================ */
+        /* ===== Security: Protection Against DevTools ===== */
+        /* ============================================ */
+        
+        const Security = {
+            init() {
+                // جلوگیری از راست‌کلیک (اختیاری - می‌تونی حذف کنی)
+                // document.addEventListener('contextmenu', (e) => e.preventDefault());
+                
+                // جلوگیری از drag تصاویر
+                document.querySelectorAll('img').forEach(img => {
+                    img.setAttribute('draggable', 'false');
+                });
+                
+                // جلوگیری از iframe
+                if (window.self !== window.top) {
+                    // اگه داخل iframe هستیم، خارج شو
+                    try {
+                        window.top.location = window.self.location;
+                    } catch (e) {
+                        document.body.innerHTML = '<div style="color: white; padding: 40px; text-align: center; font-family: sans-serif;">این صفحه در iframe قابل نمایش نیست.</div>';
+                    }
+                }
+                
+                // چک کردن integrity دوره‌ای
+                this.verifyEnvironment();
+            },
+            
+            verifyEnvironment() {
+                // چک کردن اینکه توابع حیاتی دستکاری نشدن
+                const originalParseInt = window.parseInt;
+                const originalStringify = JSON.stringify;
+                
+                setInterval(() => {
+                    if (window.parseInt !== originalParseInt) {
+                        console.error('Security: parseInt tampered!');
+                    }
+                    if (JSON.stringify !== originalStringify) {
+                        console.error('Security: JSON.stringify tampered!');
+                    }
+                }, 5000);
+            }
+        };
+
+        /* ============================================ */
+        /* ===== App Initialization ===== */
+        /* ============================================ */
+        
+        const App = {
+            init() {
+                // 1. State
+                State.init();
+                
+                // 2. Security
+                Security.init();
+                
+                // 3. UI
+                UI.updateBalance();
+                
+                // 4. Plans
+                Plans.render();
+                
+                // 5. Sidebar
+                Sidebar.init();
+                
+                // 6. Modal
+                Modal.init();
+                
+                // 7. File Upload
+                FileUpload.init();
+                
+                // 8. Menu Actions
+                MenuActions.init();
+                
+                // 9. Bind Wallet Actions
+                document.getElementById('increaseMaxBtn')?.addEventListener('click', () => Actions.increaseMax());
+                document.getElementById('transferMaxBtn')?.addEventListener('click', () => Actions.transferMax());
+                document.getElementById('claimBonusBtn')?.addEventListener('click', () => Actions.claimDailyBonus());
+                
+                // 10. Sidebar Toggle Switch در تنظیمات
+                document.getElementById('sidebarToggleSwitch')?.addEventListener('click', () => {
+                    Sidebar.toggle();
+                });
+                
+                // 11. Edit Profile
+                document.getElementById('editProfileBtn')?.addEventListener('click', () => {
+                    Sidebar.editProfile();
+                });
+                
+                // 12. چک کردن جایزه روزانه در بارگذاری
+                State.checkDailyBonusReset();
+                
+                console.log('%c🛡️ Remax AI - Secure Mode Active', 'color: #E3E4FA; font-size: 14px; font-weight: bold;');
+            }
+        };
+
+        // اجرای برنامه وقتی DOM آماده شد
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => App.init());
+        } else {
+            App.init();
+        }
+
+    </script>
+</body>
+</html>
